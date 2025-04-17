@@ -13,6 +13,7 @@ import org.mockito.MockitoAnnotations;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -87,6 +88,14 @@ class BookServiceTest {
                 createBook(3L, "Microservices", "John Doe", true)
         );
 
+        when(bookRepository.findByAuthor("John Doe"))
+                .thenAnswer(invocation -> {
+                    String author = invocation.getArgument(0);
+                    return originalBooks.stream()
+                            .filter(book -> book.getAuthor().equals(author))
+                            .collect(Collectors.toList());
+                });
+
         List<Book> expectedBooks = Arrays.asList(
                 createBook(1L, "Spring Boot", "John Doe", true),
                 createBook(3L, "Microservices", "John Doe", true)
@@ -115,7 +124,13 @@ class BookServiceTest {
                 createBook(3L, "Microservices", "John Doe", true)
         );
 
-        when(bookRepository.findByPublished(true)).thenReturn(expectedBooks);
+        when(bookRepository.findByPublished(true))
+                .thenAnswer(invocation -> {
+                    Boolean published = invocation.getArgument(0);
+                    return originalBooks.stream()
+                            .filter(book -> book.getPublished().equals(published))
+                            .collect(Collectors.toList());
+                }).thenReturn(expectedBooks);
 
         List<Book> actualBooks = bookService.getBooks(null, true);
 
@@ -138,7 +153,14 @@ class BookServiceTest {
                 createBook(3L, "Microservices", "John Doe", true)
         );
 
-        when(bookRepository.findByAuthorAndPublished("John Doe", true)).thenReturn(expectedBooks);
+        when(bookRepository.findByAuthorAndPublished("John Doe", true))
+                .thenAnswer(invocation -> {
+                    String author = invocation.getArgument(0);
+                    Boolean published = invocation.getArgument(1);
+                    return originalBooks.stream()
+                            .filter(book -> book.getAuthor().equals(author) && book.getPublished().equals(published))
+                            .collect(Collectors.toList());
+                }).thenReturn(expectedBooks);
 
         List<Book> actualBooks = bookService.getBooks("John Doe", true);
 

@@ -5,7 +5,9 @@ import io.github.dereklpm.javaassignment202504.dto.ApiResponse;
 import io.github.dereklpm.javaassignment202504.dto.request.BookRequest;
 import io.github.dereklpm.javaassignment202504.dto.response.BookResponse;
 import io.github.dereklpm.javaassignment202504.entity.Book;
+import io.github.dereklpm.javaassignment202504.exception.BookNotFoundException;
 import io.github.dereklpm.javaassignment202504.service.BookService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,6 +30,12 @@ public class BookController {
             @RequestParam(required = false) String author,
             @RequestParam(required = false) Boolean published) {
         List<Book> books = bookService.getBooks(author, published);
+
+        if (books.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse<>(false, null, BookMessage.BOOK_NOT_FOUND));
+        }
+
         List<BookResponse> responses = books.stream()
                 .map(book -> new BookResponse(book.getId(), book.getTitle(), book.getAuthor(), book.getPublished()))
                 .collect(Collectors.toList());
@@ -37,13 +45,26 @@ public class BookController {
     @PostMapping
     public ResponseEntity<ApiResponse<BookResponse>> createBook(@Valid @RequestBody BookRequest bookRequest) {
         Book createdBook = bookService.createBook(bookRequest);
-        BookResponse response = new BookResponse(createdBook.getId(), createdBook.getTitle(), createdBook.getAuthor(), createdBook.getPublished());
-        return ResponseEntity.ok(new ApiResponse<>(true, response, BookMessage.BOOK_CREATED_SUCCESS));
+        BookResponse response = new BookResponse(
+                createdBook.getId(),
+                createdBook.getTitle(),
+                createdBook.getAuthor(),
+                createdBook.getPublished()
+        );
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new ApiResponse<>(true, response, BookMessage.BOOK_CREATED_SUCCESS));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteBook(@PathVariable Long id) {
-        bookService.deleteBook(id);
-        return ResponseEntity.ok(new ApiResponse<>(true, null, BookMessage.BOOK_DELETED_SUCCESS));
+        try {
+            bookService.deleteBook(id);
+            return ResponseEntity.ok(new ApiResponse<>(true, null, BookMessage.BOOK_DELETED_SUCCESS));
+        }
+        catch (BookNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse<>(false, null, ex.getMessage()));
+        }
     }
 }

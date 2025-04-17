@@ -17,10 +17,11 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static org.hibernate.validator.internal.util.Contracts.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
@@ -46,6 +47,7 @@ class BookControllerTest {
         book.setId(id);
         return book;
     }
+
     private void verifyBooksResponse(String responseContent, List<Book> expectedBooks) throws Exception {
         ObjectMapper objectMapper = new ObjectMapper();
 
@@ -106,7 +108,13 @@ class BookControllerTest {
                 createBook(3L, "Microservices", "John Doe", true)
         );
 
-        when(bookService.getBooks("John Doe", null)).thenReturn(expectedBooks);
+        when(bookService.getBooks("John Doe", null))
+                .thenAnswer(invocation -> {
+                    String author = invocation.getArgument(0);
+                    return originalBooks.stream()
+                            .filter(book -> book.getAuthor().equals(author))
+                            .collect(Collectors.toList());
+                }).thenReturn(expectedBooks);
 
         String responseContent = mockMvc.perform(get(BASE_URL + "?author=John Doe"))
                 .andExpect(status().isOk())
@@ -136,7 +144,13 @@ class BookControllerTest {
                 createBook(3L, "Microservices", "John Doe", true)
         );
 
-        when(bookService.getBooks(null, true)).thenReturn(expectedBooks);
+        when(bookService.getBooks(null, true))
+                .thenAnswer(invocation -> {
+                    Boolean published = invocation.getArgument(1);
+                    return originalBooks.stream()
+                            .filter(book -> book.getPublished().equals(published))
+                            .collect(Collectors.toList());
+                }).thenReturn(expectedBooks);
 
         String responseContent = mockMvc.perform(get(BASE_URL + "?published=true"))
                 .andExpect(status().isOk())
@@ -166,7 +180,14 @@ class BookControllerTest {
                 createBook(3L, "Microservices", "John Doe", true)
         );
 
-        when(bookService.getBooks("John Doe", true)).thenReturn(expectedBooks);
+        when(bookService.getBooks("John Doe", true))
+                .thenAnswer(invocation -> {
+                    String author = invocation.getArgument(0);
+                    Boolean published = invocation.getArgument(1);
+                    return originalBooks.stream()
+                            .filter(book -> book.getAuthor().equals(author) && book.getPublished().equals(published))
+                            .collect(Collectors.toList());
+                }).thenReturn(expectedBooks);
 
         String responseContent = mockMvc.perform(get(BASE_URL + "?author=John Doe&published=true"))
                 .andExpect(status().isOk())
@@ -206,7 +227,7 @@ class BookControllerTest {
         mockMvc.perform(post(BASE_URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"title\":\"Spring Boot\",\"author\":\"John Doe\",\"published\":true}"))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.id").value(1L))
                 .andExpect(jsonPath("$.data.title").value("Spring Boot"))
@@ -242,7 +263,7 @@ class BookControllerTest {
         doNothing().when(bookService).deleteBook(1L);
 
         mockMvc.perform(delete(BASE_URL + "/1"))
-                .andExpect(status().isOk())
+                .andExpect(status().isNoContent())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value(BookMessage.BOOK_DELETED_SUCCESS));
 
