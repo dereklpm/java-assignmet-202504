@@ -12,10 +12,10 @@
 http://localhost:8080/api
 ```
 
-### `/book` API Endpoints
+### `/books` API Endpoints
 
 #### 1. Create a Book
-- **Endpoint**: `POST /book`
+- **Endpoint**: `POST /books`
 - **Description**: Creates a new book.
 - **Request Body**:
   ```json
@@ -41,7 +41,7 @@ http://localhost:8080/api
   ```
 
 #### 2. Get a Book by author and/or published status
-- **Endpoint**: `GET /book`
+- **Endpoint**: `GET /books`
 - **Description**: Retrieves a book by author and or published status.
 - **Query Parameter**:
   - `author` (string): The author of the book.
@@ -64,7 +64,7 @@ http://localhost:8080/api
   ```
 
 #### 4. Delete a Book
-- **Endpoint**: `DELETE /book/{id}`
+- **Endpoint**: `DELETE /books/{id}`
 - **Description**: Deletes a book by its ID.
 - **Path Parameter**:
   - `id` (integer): The ID of the book.
