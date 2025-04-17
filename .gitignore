@@ -1,24 +1,32 @@
-# Compiled class file
-*.class
+# IntelliJ IDEA specific files
+.idea/
+*.iml
+*.iws
 
-# Log file
+# Logs
+logs/
 *.log
 
-# BlueJ files
-*.ctxt
+# Target directory
+target/
 
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
+# Compiled class files
+*.class
 
-# Package Files #
+# Maven and Gradle specific files
 *.jar
 *.war
-*.nar
 *.ear
+*.db
+*.dll
+*.exe
+*.cache
+*.gz
 *.zip
-*.tar.gz
-*.rar
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
-hs_err_pid*
-replay_pid*
+# Generated files
+/out/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
